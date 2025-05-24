@@ -1,75 +1,85 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
+const errorHandler = require('./middleware/error.middleware');
+const logger = require('./middleware/logger.middleware');
 
 // Load env vars
 dotenv.config();
 
 // Connect to database
-let dbConnection = null;
-(async () => {
-  dbConnection = await connectDB();
-})();
+connectDB();
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Security middleware
+app.use(helmet());
 
-// Basic route untuk health check
-app.get('/', (req, res) => {
-  res.json({ message: 'API is running...', dbStatus: dbConnection ? 'connected' : 'disconnected' });
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.'
+});
+app.use('/api/', limiter);
+
+// CORS
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  credentials: true
+}));
+
+// Body parser
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Logger middleware
+if (process.env.NODE_ENV === 'development') {
+  app.use(logger);
+}
+
+// Health check route
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
 });
 
-// Routes
+// API Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/projects', require('./routes/projectRoutes'));
 app.use('/api/work-sessions', require('./routes/workSessionRoutes'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 
-// Error handler middleware
-app.use((err, req, res, next) => {
-  console.error(`Error: ${err.message}`);
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-  res.status(statusCode);
-  res.json({
-    message: err.message,
-    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+// Error handler middleware (harus di akhir)
+app.use(errorHandler);
+
+// Handle unhandled routes
+app.all('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route ${req.originalUrl} not found`
   });
 });
 
-// Unhandled promise rejection handler
-process.on('unhandledRejection', (reason, promise) => {
-  console.log('Unhandled Rejection at:', promise, 'reason:', reason);
-  // Jangan crash server, hanya log error
-});
-
-// Server dengan fallback port
 const PORT = process.env.PORT || 3001;
-let server;
 
-const startServer = (port) => {
-  server = app.listen(port, '127.0.0.1', () => {
-    console.log(`Server berjalan di http://127.0.0.1:${port}`);
-  }).on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-      console.log(`Port ${port} sudah digunakan. Mencoba port ${port + 1}...`);
-      startServer(port + 1);
-    } else {
-      console.error('Server error:', err);
-    }
-  });
-};
+const server = app.listen(PORT, () => {
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+});
 
-startServer(PORT);
-
-// Handle server shutdown gracefully
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received. Shutting down gracefully');
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err, promise) => {
+  console.log(`Error: ${err.message}`);
   server.close(() => {
-    console.log('Process terminated');
+    process.exit(1);
   });
 });
+
+module.exports = app;
