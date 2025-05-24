@@ -1,8 +1,15 @@
 const User = require('../models/User');
-const { generateToken, generateRefreshToken } = require('../config/jwt');
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
 class AuthService {
+  // Generate JWT Token
+  generateToken(userId) {
+    return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    });
+  }
+
   // Register new user
   async registerUser(userData) {
     const { name, email, password } = userData;
@@ -12,29 +19,24 @@ class AuthService {
     if (existingUser) {
       throw new Error('User dengan email ini sudah terdaftar');
     }
-    
+
     // Create new user
     const user = await User.create({
       name,
       email,
-      password
+      password,
     });
-    
-    // Generate tokens
-    const token = generateToken({ id: user._id });
-    const refreshToken = generateRefreshToken({ id: user._id });
-    
+
     return {
       user: {
         _id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
       },
-      token,
-      refreshToken
+      token: this.generateToken(user._id),
     };
   }
-  
+
   // Login user
   async loginUser(email, password) {
     // Find user by email
@@ -42,35 +44,29 @@ class AuthService {
     if (!user) {
       throw new Error('Email atau password salah');
     }
-    
+
     // Check password
     const isPasswordValid = await user.matchPassword(password);
     if (!isPasswordValid) {
       throw new Error('Email atau password salah');
     }
-    
-    // Generate tokens
-    const token = generateToken({ id: user._id });
-    const refreshToken = generateRefreshToken({ id: user._id });
-    
+
     return {
       user: {
         _id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
       },
-      token,
-      refreshToken
+      token: this.generateToken(user._id),
     };
   }
-  
+
   // Get user profile
   async getUserProfile(userId) {
     const user = await User.findById(userId).select('-password');
     if (!user) {
       throw new Error('User tidak ditemukan');
     }
-    
     return user;
   }
 }

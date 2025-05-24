@@ -19,19 +19,14 @@ const userSchemas = {
   }),
   
   login: Joi.object({
-    email: Joi.string().email().required().messages({
-      'string.email': 'Format email tidak valid',
-      'any.required': 'Email harus diisi'
-    }),
-    password: Joi.string().required().messages({
-      'any.required': 'Password harus diisi'
-    })
+    email: Joi.string().email().required(),
+    password: Joi.string().required()
   }),
   
   updateProfile: Joi.object({
-    name: Joi.string().min(2).max(50).optional(),
-    email: Joi.string().email().optional(),
-    password: Joi.string().min(6).optional()
+    name: Joi.string().min(2).max(50),
+    email: Joi.string().email(),
+    password: Joi.string().min(6)
   })
 };
 
@@ -39,21 +34,17 @@ const userSchemas = {
 const projectSchemas = {
   create: Joi.object({
     name: Joi.string().min(1).max(100).required().messages({
-      'string.min': 'Nama project harus diisi',
-      'string.max': 'Nama project maksimal 100 karakter',
-      'any.required': 'Nama project harus diisi'
+      'any.required': 'Nama project harus diisi',
+      'string.max': 'Nama project maksimal 100 karakter'
     }),
-    description: Joi.string().max(500).optional().allow(''),
-    color: Joi.string().pattern(/^#[0-9A-F]{6}$/i).optional().messages({
-      'string.pattern.base': 'Format warna harus berupa hex color (contoh: #3B82F6)'
-    })
+    description: Joi.string().max(500).allow(''),
+    color: Joi.string().pattern(/^#[0-9A-F]{6}$/i).default('#3B82F6')
   }),
   
   update: Joi.object({
-    name: Joi.string().min(1).max(100).optional(),
-    description: Joi.string().max(500).optional().allow(''),
-    color: Joi.string().pattern(/^#[0-9A-F]{6}$/i).optional(),
-    isActive: Joi.boolean().optional()
+    name: Joi.string().min(1).max(100),
+    description: Joi.string().max(500).allow(''),
+    color: Joi.string().pattern(/^#[0-9A-F]{6}$/i)
   })
 };
 
@@ -63,31 +54,16 @@ const workSessionSchemas = {
     projectId: Joi.string().required().messages({
       'any.required': 'Project ID harus diisi'
     }),
-    notes: Joi.string().max(500).optional().allow('')
+    notes: Joi.string().max(500).allow('')
   }),
   
-  update: Joi.object({
-    notes: Joi.string().max(500).optional().allow('')
-  })
-};
-
-// Query validation schemas
-const querySchemas = {
-  pagination: Joi.object({
-    page: Joi.number().integer().min(1).default(1),
-    limit: Joi.number().integer().min(1).max(100).default(10)
-  }),
-  
-  dateRange: Joi.object({
-    startDate: Joi.date().optional(),
-    endDate: Joi.date().optional(),
-    period: Joi.string().valid('week', 'month', 'year').default('week')
+  end: Joi.object({
+    notes: Joi.string().max(500).allow('')
   })
 };
 
 module.exports = {
   userSchemas,
   projectSchemas,
-  workSessionSchemas,
-  querySchemas
+  workSessionSchemas
 };
