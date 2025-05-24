@@ -3,9 +3,9 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const connectDB = require('./config/db');
-const errorHandler = require('./middleware/error.middleware');
-const logger = require('./middleware/logger.middleware');
+const connectDB = require('./src/config/db');
+const errorHandler = require('./src/middleware/error.middleware');
+const logger = require('./src/middleware/logger.middleware');
 
 // Load env vars
 dotenv.config();
@@ -43,19 +43,19 @@ if (process.env.NODE_ENV === 'development') {
 
 // Health check route
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
 });
 
 // API Routes
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/projects', require('./routes/projectRoutes'));
-app.use('/api/work-sessions', require('./routes/workSessionRoutes'));
-app.use('/api/dashboard', require('./routes/dashboardRoutes'));
+app.use('/api/auth', require('./src/routes/authRoutes'));
+app.use('/api/users', require('./src/routes/userRoutes'));
+app.use('/api/projects', require('./src/routes/projectRoutes'));
+app.use('/api/work-sessions', require('./src/routes/workSessionRoutes'));
+app.use('/api/dashboard', require('./src/routes/dashboardRoutes'));
 
 // Error handler middleware (harus di akhir)
 app.use(errorHandler);

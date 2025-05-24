@@ -7,9 +7,9 @@ const Project = require('../models/Project');
 const getDashboardStats = async (req, res) => {
   try {
     const { period = 'week' } = req.query; // week, month, year
-    
+
     let startDate = new Date();
-    
+
     switch (period) {
       case 'week':
         startDate.setDate(startDate.getDate() - 7);
