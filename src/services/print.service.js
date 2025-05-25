@@ -1,0 +1,289 @@
+const ThermalPrinter = require('node-thermal-printer').printer;
+const PrinterTypes = require('node-thermal-printer').types;
+const path = require('path');
+const fs = require('fs').promises;
+
+class PrintService {
+  constructor() {
+    this.printer = null;
+    this.initializePrinter();
+  }
+
+  // Initialize thermal printer
+  initializePrinter() {
+    this.printer = new ThermalPrinter({
+      type: PrinterTypes.EPSON,
+      interface: process.env.PRINTER_INTERFACE || 'tcp://192.168.1.100',
+      characterSet: 'SLOVENIA',
+      removeSpecialCharacters: false,
+      lineCharacter: '=',
+      breakLine: true,
+      options: {
+        timeout: 5000
+      }
+    });
+  }
+
+  // Print work session receipt
+  async printWorkSessionReceipt(pulse, project, user) {
+    try {
+      const isConnected = await this.printer.isPrinterConnected();
+      if (!isConnected) {
+        throw new Error('Printer not connected');
+      }
+
+      // Clear any previous content
+      this.printer.clear();
+
+      // Header
+      this.printer.alignCenter();
+      this.printer.setTextSize(1, 1);
+      this.printer.bold(true);
+      this.printer.println('WORKFLOWPULSE');
+      this.printer.println('Work Session Receipt');
+      this.printer.bold(false);
+      this.printer.drawLine();
+
+      // Session details
+      this.printer.alignLeft();
+      this.printer.setTextNormal();
+      this.printer.println(`Date: ${new Date(pulse.startTime).toLocaleDateString()}`);
+      this.printer.println(`Time: ${new Date(pulse.startTime).toLocaleTimeString()} - ${new Date(pulse.endTime).toLocaleTimeString()}`);
+      this.printer.println(`Duration: ${this.formatDuration(pulse.duration)}`);
+      this.printer.println('');
+
+      // User details
+      this.printer.println(`Worker: ${user.name}`);
+      this.printer.println(`Email: ${user.email}`);
+      this.printer.println('');
+
+      // Project details
+      this.printer.println(`Project: ${project.name}`);
+      this.printer.println(`Rate: $${project.hourlyRate}/hour`);
+      this.printer.println('');
+
+      // Earnings calculation
+      this.printer.drawLine();
+      this.printer.bold(true);
+      this.printer.println(`Total Earnings: $${pulse.earnings.toFixed(2)}`);
+      this.printer.bold(false);
+      this.printer.drawLine();
+
+      // Footer
+      this.printer.println('');
+      this.printer.alignCenter();
+      this.printer.setTextSize(0, 0);
+      this.printer.println('Thank you for using WorkFlowPulse!');
+      this.printer.println(new Date().toISOString());
+      
+      // Cut paper
+      this.printer.cut();
+
+      // Execute print
+      await this.printer.execute();
+      
+      return {
+        success: true,
+        message: 'Receipt printed successfully',
+        receiptId: pulse._id
+      };
+    } catch (error) {
+      throw new Error(`Print failed: ${error.message}`);
+    }
+  }
+
+  // Print project summary
+  async printProjectSummary(project, pulses, user) {
+    try {
+      const isConnected = await this.printer.isPrinterConnected();
+      if (!isConnected) {
+        throw new Error('Printer not connected');
+      }
+
+      this.printer.clear();
+
+      // Header
+      this.printer.alignCenter();
+      this.printer.setTextSize(1, 1);
+      this.printer.bold(true);
+      this.printer.println('PROJECT SUMMARY');
+      this.printer.bold(false);
+      this.printer.drawLine();
+
+      // Project details
+      this.printer.alignLeft();
+      this.printer.setTextNormal();
+      this.printer.println(`Project: ${project.name}`);
+      this.printer.println(`Status: ${project.status.toUpperCase()}`);
+      this.printer.println(`Created: ${new Date(project.createdAt).toLocaleDateString()}`);
+      this.printer.println(`Worker: ${user.name}`);
+      this.printer.println('');
+
+      // Summary statistics
+      const totalDuration = pulses.reduce((sum, pulse) => sum + pulse.duration, 0);
+      const totalEarnings = pulses.reduce((sum, pulse) => sum + pulse.earnings, 0);
+      
+      this.printer.println(`Total Sessions: ${pulses.length}`);
+      this.printer.println(`Total Time: ${this.formatDuration(totalDuration)}`);
+      this.printer.println(`Total Earnings: $${totalEarnings.toFixed(2)}`);
+      this.printer.println(`Hourly Rate: $${project.hourlyRate}`);
+      this.printer.println('');
+
+      // Recent sessions
+      if (pulses.length > 0) {
+        this.printer.drawLine();
+        this.printer.bold(true);
+        this.printer.println('RECENT SESSIONS');
+        this.printer.bold(false);
+        
+        const recentSessions = pulses.slice(-5).reverse();
+        recentSessions.forEach(pulse => {
+          this.printer.println(`${new Date(pulse.startTime).toLocaleDateString()} - ${this.formatDuration(pulse.duration)} - $${pulse.earnings.toFixed(2)}`);
+        });
+      }
+
+      this.printer.println('');
+      this.printer.alignCenter();
+      this.printer.println('Generated by WorkFlowPulse');
+      this.printer.println(new Date().toISOString());
+      
+      this.printer.cut();
+      await this.printer.execute();
+      
+      return {
+        success: true,
+        message: 'Project summary printed successfully',
+        projectId: project._id
+      };
+    } catch (error) {
+      throw new Error(`Print failed: ${error.message}`);
+    }
+  }
+
+  // Print daily summary
+  async printDailySummary(date, pulses, user) {
+    try {
+      const isConnected = await this.printer.isPrinterConnected();
+      if (!isConnected) {
+        throw new Error('Printer not connected');
+      }
+
+      this.printer.clear();
+
+      // Header
+      this.printer.alignCenter();
+      this.printer.setTextSize(1, 1);
+      this.printer.bold(true);
+      this.printer.println('DAILY SUMMARY');
+      this.printer.bold(false);
+      this.printer.drawLine();
+
+      // Date and user
+      this.printer.alignLeft();
+      this.printer.setTextNormal();
+      this.printer.println(`Date: ${new Date(date).toLocaleDateString()}`);
+      this.printer.println(`Worker: ${user.name}`);
+      this.printer.println('');
+
+      // Summary statistics
+      const totalDuration = pulses.reduce((sum, pulse) => sum + pulse.duration, 0);
+      const totalEarnings = pulses.reduce((sum, pulse) => sum + pulse.earnings, 0);
+      
+      this.printer.println(`Total Sessions: ${pulses.length}`);
+      this.printer.println(`Total Time: ${this.formatDuration(totalDuration)}`);
+      this.printer.println(`Total Earnings: $${totalEarnings.toFixed(2)}`);
+      this.printer.println('');
+
+      // Sessions by project
+      if (pulses.length > 0) {
+        this.printer.drawLine();
+        this.printer.bold(true);
+        this.printer.println('SESSIONS BY PROJECT');
+        this.printer.bold(false);
+        
+        const projectGroups = pulses.reduce((groups, pulse) => {
+          const projectName = pulse.projectId?.name || 'Unknown Project';
+          if (!groups[projectName]) {
+            groups[projectName] = { duration: 0, earnings: 0, count: 0 };
+          }
+          groups[projectName].duration += pulse.duration;
+          groups[projectName].earnings += pulse.earnings;
+          groups[projectName].count += 1;
+          return groups;
+        }, {});
+
+        Object.entries(projectGroups).forEach(([projectName, stats]) => {
+          this.printer.println(`${projectName}:`);
+          this.printer.println(`  ${stats.count} sessions - ${this.formatDuration(stats.duration)} - $${stats.earnings.toFixed(2)}`);
+        });
+      }
+
+      this.printer.println('');
+      this.printer.alignCenter();
+      this.printer.println('Generated by WorkFlowPulse');
+      this.printer.println(new Date().toISOString());
+      
+      this.printer.cut();
+      await this.printer.execute();
+      
+      return {
+        success: true,
+        message: 'Daily summary printed successfully',
+        date: date
+      };
+    } catch (error) {
+      throw new Error(`Print failed: ${error.message}`);
+    }
+  }
+
+  // Format duration in minutes to hours:minutes
+  formatDuration(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
+  }
+
+  // Test printer connection
+  async testPrinter() {
+    try {
+      const isConnected = await this.printer.isPrinterConnected();
+      if (!isConnected) {
+        throw new Error('Printer not connected');
+      }
+
+      this.printer.clear();
+      this.printer.alignCenter();
+      this.printer.println('PRINTER TEST');
+      this.printer.println('WorkFlowPulse');
+      this.printer.println(new Date().toISOString());
+      this.printer.cut();
+      await this.printer.execute();
+      
+      return {
+        success: true,
+        message: 'Printer test successful'
+      };
+    } catch (error) {
+      throw new Error(`Printer test failed: ${error.message}`);
+    }
+  }
+
+  // Get printer status
+  async getPrinterStatus() {
+    try {
+      const isConnected = await this.printer.isPrinterConnected();
+      return {
+        connected: isConnected,
+        interface: process.env.PRINTER_INTERFACE || 'tcp://192.168.1.100',
+        type: 'EPSON Thermal Printer'
+      };
+    } catch (error) {
+      return {
+        connected: false,
+        error: error.message
+      };
+    }
+  }
+}
+
+module.exports = new PrintService();
