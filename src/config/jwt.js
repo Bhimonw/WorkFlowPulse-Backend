@@ -1,47 +1,29 @@
 const jwt = require('jsonwebtoken');
+const { JWT_SECRET, JWT_EXPIRES_IN, JWT_REFRESH_SECRET } = require('./environment');
 
-module.exports = {
-  secret: process.env.JWT_SECRET || 'your-super-secret-jwt-key',
-  expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-  refreshSecret: process.env.JWT_REFRESH_SECRET || 'your-refresh-secret',
-  refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
-  
-  // JWT Options
-  options: {
-    issuer: 'WorkFlowPulse',
-    audience: 'WorkFlowPulse-Users',
-    algorithm: 'HS256'
-  }
-};
-
-// Generate JWT Token
 const generateToken = (payload) => {
-  return jwt.sign(payload, jwtConfig.secret, {
-    expiresIn: jwtConfig.expiresIn
+  return jwt.sign(payload, JWT_SECRET, {
+    expiresIn: JWT_EXPIRES_IN,
   });
 };
 
-// Generate Refresh Token
 const generateRefreshToken = (payload) => {
-  return jwt.sign(payload, jwtConfig.refreshSecret, {
-    expiresIn: jwtConfig.refreshExpiresIn
+  return jwt.sign(payload, JWT_REFRESH_SECRET, {
+    expiresIn: '30d',
   });
 };
 
-// Verify Token
 const verifyToken = (token) => {
-  return jwt.verify(token, jwtConfig.secret);
+  return jwt.verify(token, JWT_SECRET);
 };
 
-// Verify Refresh Token
 const verifyRefreshToken = (token) => {
-  return jwt.verify(token, jwtConfig.refreshSecret);
+  return jwt.verify(token, JWT_REFRESH_SECRET);
 };
 
 module.exports = {
-  jwtConfig,
   generateToken,
   generateRefreshToken,
   verifyToken,
-  verifyRefreshToken
+  verifyRefreshToken,
 };
