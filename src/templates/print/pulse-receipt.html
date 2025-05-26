@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Pulse Receipt</title>
+    <style>
+        body { font-family: 'Courier New', monospace; font-size: 12px; margin: 0; padding: 10px; }
+        .receipt { width: 300px; margin: 0 auto; }
+        .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+        .row { display: flex; justify-content: space-between; margin: 5px 0; }
+        .total { border-top: 1px dashed #000; padding-top: 10px; margin-top: 10px; font-weight: bold; }
+        .footer { text-align: center; margin-top: 15px; font-size: 10px; }
+        .qr-code { text-align: center; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="receipt">
+        <div class="header">
+            <h2>WORKFLOWPULSE</h2>
+            <p>Time Tracking Receipt</p>
+            <p>{{date}}</p>
+        </div>
+        
+        <div class="row">
+            <span>Project:</span>
+            <span>{{projectName}}</span>
+        </div>
+        
+        <div class="row">
+            <span>Start Time:</span>
+            <span>{{startTime}}</span>
+        </div>
+        
+        <div class="row">
+            <span>End Time:</span>
+            <span>{{endTime}}</span>
+        </div>
+        
+        <div class="row">
+            <span>Duration:</span>
+            <span>{{duration}}</span>
+        </div>
+        
+        <div class="row">
+            <span>Type:</span>
+            <span>{{type}}</span>
+        </div>
+        
+        {{#if description}}
+        <div class="row">
+            <span>Description:</span>
+            <span>{{description}}</span>
+        </div>
+        {{/if}}
+        
+        {{#if hourlyRate}}
+        <div class="total">
+            <div class="row">
+                <span>Rate/Hour:</span>
+                <span>${{hourlyRate}}</span>
+            </div>
+            <div class="row">
+                <span>TOTAL EARNED:</span>
+                <span>${{totalEarned}}</span>
+            </div>
+        </div>
+        {{/if}}
+        
+        {{#if includeQR}}
+        <div class="qr-code">
+            <img src="{{qrCodeUrl}}" alt="QR Code" width="80" height="80">
+        </div>
+        {{/if}}
+        
+        <div class="footer">
+            <p>Receipt ID: {{receiptId}}</p>
+            <p>Thank you for using WorkFlowPulse!</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Project Summary</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #059669; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .stats { display: flex; justify-content: space-around; margin: 20px 0; }
+        .stat-item { text-align: center; background: white; padding: 15px; border-radius: 5px; }
+        .stat-number { font-size: 24px; font-weight: bold; color: #059669; }
+        .project-list { background: white; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .project-item { border-bottom: 1px solid #e5e7eb; padding: 10px 0; }
+        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Weekly Summary</h1>
+            <p>{{startDate}} - {{endDate}}</p>
+        </div>
+        <div class="content">
+            <h2>Hello {{name}},</h2>
+            <p>Here's your productivity summary for this week:</p>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number">{{totalHours}}</div>
+                    <div>Total Hours</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{projectsWorked}}</div>
+                    <div>Projects</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{totalEarnings}}</div>
+                    <div>Earnings</div>
+                </div>
+            </div>
+            
+            <div class="project-list">
+                <h3>Project Breakdown:</h3>
+                {{#each projects}}
+                <div class="project-item">
+                    <strong>{{name}}</strong><br>
+                    Time: {{hours}} hours | Earnings: ${{earnings}}
+                </div>
+                {{/each}}
+            </div>
+            
+            <p>Keep up the great work! 🚀</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2024 WorkFlowPulse. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Deadline Reminder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        .project-info {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+        .deadline {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .btn {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⏰ Project Deadline Reminder</h1>
+        <p>WorkFlowPulse Notification</p>
+    </div>
+    
+    <div class="content">
+        <h2>Hello {{userName}},</h2>
+        
+        <p>This is a friendly reminder about an upcoming project deadline.</p>
+        
+        <div class="project-info">
+            <h3>📋 Project Details</h3>
+            <p><strong>Project:</strong> {{projectName}}</p>
+            <p><strong>Description:</strong> {{projectDescription}}</p>
+            <p><strong>Priority:</strong> {{projectPriority}}</p>
+            <p><strong>Status:</strong> {{projectStatus}}</p>
+        </div>
+        
+        <div class="deadline">
+            <h3>⚠️ Deadline Alert</h3>
+            <p><strong>Due Date:</strong> {{dueDate}}</p>
+            <p><strong>Time Remaining:</strong> {{timeRemaining}}</p>
+            <p><strong>Days Left:</strong> {{daysLeft}} days</p>
+        </div>
+        
+        <p>Please ensure you complete your tasks before the deadline to maintain project timeline.</p>
+        
+        <a href="{{projectUrl}}" class="btn">View Project Details</a>
+        
+        <h3>📊 Current Progress</h3>
+        <ul>
+            <li>Total Time Logged: {{totalTimeLogged}}</li>
+            <li>Completion Rate: {{completionRate}}%</li>
+            <li>Active Pulses: {{activePulses}}</li>
+        </ul>
+    </div>
+    
+    <div class="footer">
+        <p>This is an automated message from WorkFlowPulse</p>
+        <p>© {{currentYear}} WorkFlowPulse. All rights reserved.</p>
+    </div>
+</body>
+</html>
